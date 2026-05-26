@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa Mental - Markmap POC</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #f5f5f5; transition: background 0.3s; }
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+    #editor {
+      width: 320px;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #ddd;
+      background: #fff;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    #editor h2 {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #555;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+      transition: background 0.3s, color 0.3s;
+    }
+    textarea {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      resize: none;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      outline: none;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    #map-container {
+      flex: 1;
+      position: relative;
+    }
+    svg#mindmap {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Toolbar */
+    #toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+    #toolbar button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #444;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      line-height: 1;
+    }
+    #toolbar button:hover {
+      background: #f0f0f0;
+      border-color: #bbb;
+    }
+
+    /* Search bar */
+    #searchbar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 4px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    #searchbar input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      width: 180px;
+      background: transparent;
+      color: #333;
+    }
+    #searchbar input.no-match {
+      color: #e53e3e;
+    }
+    #search-counter {
+      font-size: 12px;
+      color: #888;
+      min-width: 52px;
+      text-align: center;
+    }
+    #searchbar button {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    #searchbar button:hover { background: #f0f0f0; }
+
+    /* Dark mode */
+    body.dark { background: #1e1e2e; }
+    body.dark #editor {
+      background: #1e1e2e;
+      border-right-color: #333;
+    }
+    body.dark #editor h2 {
+      background: #181825;
+      color: #aaa;
+      border-bottom-color: #333;
+    }
+    body.dark textarea {
+      background: #1e1e2e;
+      color: #cdd6f4;
+    }
+    body.dark #toolbar button {
+      background: #2a2a3e;
+      color: #cdd6f4;
+      border-color: #444;
+    }
+    body.dark #toolbar button:hover {
+      background: #363650;
+    }
+    body.dark #searchbar {
+      background: #2a2a3e;
+      border-color: #444;
+    }
+    body.dark #searchbar input {
+      color: #cdd6f4;
+    }
+    body.dark #searchbar button {
+      color: #cdd6f4;
+    }
+    body.dark #searchbar button:hover {
+      background: #363650;
+    }
+    body.dark #search-counter {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="editor">
+      <h2>Markdown</h2>
+      <textarea id="md-input" spellcheck="false">
+# Mapa Mental
+
+## Tecnologia
+- Frontend
+  - React
+  - Vue
+  - Svelte
+- Backend
+  - Node.js
+  - Python
+  - Go
+
+## Aprendizado
+- Livros
+- Cursos online
+- Projetos práticos
+
+## Metas 2026
+- Lançar produto
+- Contribuir open source
+- Aprender Rust
+      </textarea>
+    </div>
+    <div id="map-container">
+      <svg id="mindmap"></svg>
+      <div id="searchbar">
+        <input id="search-input" type="text" placeholder="Buscar..." autocomplete="off" />
+        <span id="search-counter"></span>
+        <button onclick="searchPrev()" title="Anterior (Shift+Enter)">↑</button>
+        <button onclick="searchNext()" title="Próximo (Enter)">↓</button>
+        <button onclick="closeSearch()" title="Fechar (Esc)">×</button>
+      </div>
+      <div id="toolbar">
+        <button id="btn-zoom-in" title="Zoom In" onclick="mm.rescale(1.25)">+</button>
+        <button id="btn-zoom-out" title="Zoom Out" onclick="mm.rescale(0.8)">−</button>
+        <button id="btn-fit" title="Ajustar tela" onclick="mm.fit()">⊡</button>
+        <button id="btn-fold" title="Expandir/Colapsar tudo" onclick="toggleAll()">⊟</button>
+        <button id="btn-dark" title="Modo escuro" onclick="toggleDark()">◑</button>
+        <button id="btn-search" title="Buscar (Ctrl+F)" onclick="openSearch()">🔍</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18"></script>
+  <script src="markmap-src/packages/markmap-view/dist/browser/index.js"></script>
+  <script>
+    const { Transformer } = window.markmap;
+    const { Markmap, loadCSS, loadJS } = window.markmap;
+
+    const transformer = new Transformer();
+    const svg = document.getElementById('mindmap');
+    let mm = Markmap.create(svg, { bidirectional: true, autoFit: true });
+
+    function update() {
+      const md = document.getElementById('md-input').value;
+      const { root, features } = transformer.transform(md);
+      const { styles, scripts } = transformer.getUsedAssets(features);
+      if (styles) loadCSS(styles);
+      if (scripts) loadJS(scripts, { getMarkmap: () => window.markmap });
+      mm.setData(root);
+      mm.fit();
+    }
+
+    // Expand / Collapse all
+    let allFolded = false;
+    function setFoldAll(node, fold, isRoot = true) {
+      if (isRoot) {
+        // bidirectional mode: direct children of root are toggled via foldLeft/foldRight on the root
+        node.payload = { ...(node.payload || {}), foldLeft: fold, foldRight: fold };
+      } else {
+        node.payload = { ...(node.payload || {}), fold };
+      }
+      if (node.children) node.children.forEach(c => setFoldAll(c, fold, false));
+    }
+    function toggleAll() {
+      allFolded = !allFolded;
+      setFoldAll(mm.state.data, allFolded ? 1 : 0);
+      mm.renderData();
+      document.getElementById('btn-fold').textContent = allFolded ? '⊞' : '⊟';
+      document.getElementById('btn-fold').title = allFolded ? 'Expandir tudo' : 'Colapsar tudo';
+    }
+
+    // Dark mode
+    let isDark = false;
+    function toggleDark() {
+      isDark = !isDark;
+      document.body.classList.toggle('dark', isDark);
+      document.getElementById('map-container').classList.toggle('markmap-dark', isDark);
+      document.getElementById('btn-dark').title = isDark ? 'Modo claro' : 'Modo escuro';
+    }
+
+    // Search
+    let searchMatches = [];
+    let searchIndex = -1;
+
+    function nodeText(node) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = node.content || '';
+      return tmp.textContent;
+    }
+
+    function collectAllNodes(node, result = []) {
+      result.push(node);
+      if (node.children) node.children.forEach(c => collectAllNodes(c, result));
+      return result;
+    }
+
+    function unfoldPath(target) {
+      function walk(node) {
+        if (node === target) return true;
+        if (!node.children) return false;
+        for (const child of node.children) {
+          if (walk(child)) {
+            node.payload = { ...(node.payload || {}), fold: 0, foldLeft: 0, foldRight: 0 };
+            return true;
+          }
+        }
+        return false;
+      }
+      walk(mm.state.data);
+    }
+
+    async function navigateToMatch() {
+      if (!searchMatches.length) {
+        mm.setHighlight(null);
+        updateCounter();
+        return;
+      }
+      const node = searchMatches[searchIndex];
+      unfoldPath(node);
+      await mm.setHighlight(node);
+      mm.centerNode(node);
+      updateCounter();
+    }
+
+    function runSearch(query) {
+      const q = query.trim().toLowerCase();
+      const input = document.getElementById('search-input');
+      if (!q) {
+        searchMatches = [];
+        searchIndex = -1;
+        input.classList.remove('no-match');
+        mm.setHighlight(null);
+        updateCounter();
+        return;
+      }
+      searchMatches = collectAllNodes(mm.state.data).filter(n => nodeText(n).toLowerCase().includes(q));
+      searchIndex = searchMatches.length ? 0 : -1;
+      input.classList.toggle('no-match', searchMatches.length === 0);
+      navigateToMatch();
+    }
+
+    function searchNext() {
+      if (!searchMatches.length) return;
+      searchIndex = (searchIndex + 1) % searchMatches.length;
+      navigateToMatch();
+    }
+
+    function searchPrev() {
+      if (!searchMatches.length) return;
+      searchIndex = (searchIndex - 1 + searchMatches.length) % searchMatches.length;
+      navigateToMatch();
+    }
+
+    function updateCounter() {
+      const el = document.getElementById('search-counter');
+      const q = document.getElementById('search-input').value.trim();
+      el.textContent = q ? (searchMatches.length ? `${searchIndex + 1}/${searchMatches.length}` : '0/0') : '';
+    }
+
+    function openSearch() {
+      const bar = document.getElementById('searchbar');
+      bar.style.display = 'flex';
+      document.getElementById('search-input').focus();
+    }
+
+    function closeSearch() {
+      const bar = document.getElementById('searchbar');
+      bar.style.display = 'none';
+      document.getElementById('search-input').value = '';
+      searchMatches = [];
+      searchIndex = -1;
+      mm.setHighlight(null);
+      updateCounter();
+    }
+
+    document.getElementById('search-input').addEventListener('input', e => runSearch(e.target.value));
+    document.getElementById('search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.shiftKey ? searchPrev() : searchNext(); }
+      if (e.key === 'Escape') closeSearch();
+    });
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        openSearch();
+      }
+    });
+
+    document.getElementById('md-input').addEventListener('input', update);
+    update();
+  </script>
+</body>
+</html>
