@@ -1,4 +1,4 @@
 [submodule "markmap-src"]
 	path = markmap-src
-	url = git@github.com:danieldrduarte/markmap.git
+	url = https://github.com/danieldrduarte/markmap.git
 	branch = master
