@@ -358,29 +358,57 @@
       mm.fit();
     }
 
+    /** Limpa todos os estados de fold de todos os nós. */
+    function clearAllFoldState(node) {
+      if (!node) return;
+      if (node.payload) {
+        const { fold, foldLeft, foldRight, ...rest } = node.payload;
+        node.payload = Object.keys(rest).length ? rest : undefined;
+      }
+      node.children?.forEach(clearAllFoldState);
+    }
+
     function toggleLayout() {
       layoutBoth = !layoutBoth;
       const btn = document.getElementById('btn-layout');
       btn.textContent = layoutBoth ? '⇔' : '→';
       btn.title = layoutBoth ? 'Ambos os lados' : 'Somente direita';
       btn.classList.toggle('active', !layoutBoth);
-      update();
+      
+      // Limpa todos os estados de fold ao trocar de modo para evitar inconsistências
+      if (mm.state.data) {
+        clearAllFoldState(mm.state.data);
+      }
+      allFolded = false;
+      document.getElementById('btn-fold').textContent = '⊟';
+      document.getElementById('btn-fold').title = 'Colapsar tudo';
+      
+      mm.setOptions({ bidirectional: layoutBoth });
+      mm.renderData();
+      mm.fit();
     }
 
     // Expand / Collapse all
     let allFolded = false;
-    function setFoldAll(node, fold, isRoot = true) {
-      if (isRoot) {
-        // bidirectional mode: direct children of root are toggled via foldLeft/foldRight on the root
-        node.payload = { ...(node.payload || {}), foldLeft: fold, foldRight: fold };
+    function setFoldAll(node, fold, isRoot = false) {
+      // No modo bidirecional, a raiz usa foldLeft/foldRight; demais nós usam fold
+      // No modo direita, todos usam fold
+      // Sempre limpar os estados de fold que não são usados no modo atual
+      const p = { ...(node.payload || {}) };
+      delete p.fold;
+      delete p.foldLeft;
+      delete p.foldRight;
+      
+      if (isRoot && layoutBoth) {
+        node.payload = { ...p, foldLeft: fold, foldRight: fold };
       } else {
-        node.payload = { ...(node.payload || {}), fold };
+        node.payload = { ...p, fold };
       }
       if (node.children) node.children.forEach(c => setFoldAll(c, fold, false));
     }
     function toggleAll() {
       allFolded = !allFolded;
-      setFoldAll(mm.state.data, allFolded ? 1 : 0);
+      setFoldAll(mm.state.data, allFolded ? 1 : 0, true);
       mm.renderData();
       document.getElementById('btn-fold').textContent = allFolded ? '⊞' : '⊟';
       document.getElementById('btn-fold').title = allFolded ? 'Expandir tudo' : 'Colapsar tudo';
