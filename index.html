@@ -5,33 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mapa Mental - Markmap POC</title>
   <style>
+    :root {
+      --pink: #E91E8C;
+      --pink-light: #FCE4EC;
+      --pink-lighter: #FFF0F5;
+      --pink-border: #F8BBD0;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: sans-serif; background: #f5f5f5; transition: background 0.3s; overflow: hidden; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #f8f9fa; 
+      overflow: hidden; 
+    }
     #app {
       display: flex;
       height: 100vh;
     }
+
+    /* Editor Panel */
     #editor {
       width: 320px;
       min-width: 200px;
       display: flex;
       flex-direction: column;
-      border-right: 1px solid #ddd;
+      border-right: 1px solid #e0e0e0;
       background: #fff;
-      transition: background 0.3s, border-color 0.3s, width 0.25s ease, min-width 0.25s ease;
+      transition: width 0.25s ease, min-width 0.25s ease;
       overflow: hidden;
     }
     #editor.collapsed {
-      width: 40px;
-      min-width: 40px;
+      width: 44px;
+      min-width: 44px;
     }
     #editor h2 {
       padding: 12px 16px;
-      font-size: 14px;
-      color: #555;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
       border-bottom: 1px solid #eee;
       background: #fafafa;
-      transition: background 0.3s, color 0.3s, padding 0.25s ease;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -40,256 +52,210 @@
       flex-shrink: 0;
     }
     #editor.collapsed h2 {
-      padding: 8px 4px;
+      padding: 10px 8px;
       justify-content: center;
     }
-    #editor.collapsed h2 span {
-      display: none;
-    }
-    #editor.collapsed textarea {
-      opacity: 0;
-      pointer-events: none;
-    }
+    #editor.collapsed h2 span { display: none; }
+    #editor.collapsed textarea { opacity: 0; pointer-events: none; }
     #btn-toggle-panel {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
       border: 1px solid #ddd;
-      border-radius: 4px;
+      border-radius: 6px;
       background: transparent;
       color: #888;
-      font-size: 13px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.15s, color 0.15s;
-      padding: 0;
-      line-height: 1;
     }
-    #btn-toggle-panel:hover { background: #e8e8e8; color: #333; }
-    #btn-layout.active {
-      background: #e8f0fe;
-      color: #1a73e8;
-      border-color: #a8c7fa;
-    }
+    #btn-toggle-panel:hover { background: var(--pink-light); color: var(--pink); }
     textarea {
       flex: 1;
       padding: 12px;
       border: none;
       resize: none;
-      font-family: monospace;
+      font-family: 'SF Mono', Monaco, monospace;
       font-size: 13px;
       line-height: 1.6;
       outline: none;
       color: #333;
-      transition: background 0.3s, color 0.3s;
     }
+
+    /* Map Container */
     #map-container {
       flex: 1;
       position: relative;
+      background: #f8f9fa;
     }
     svg#mindmap {
       width: 100%;
       height: 100%;
     }
 
-    /* Toolbar */
+    /* Tema rosa para o markmap */
+    .markmap {
+      --markmap-a-color: var(--pink);
+    }
+    .markmap-link {
+      stroke: var(--pink) !important;
+    }
+    .markmap-node > line {
+      stroke: var(--pink) !important;
+    }
+    .markmap-node > circle {
+      stroke: var(--pink) !important;
+    }
+
+    /* Bottom Toolbar */
     #toolbar {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       z-index: 10;
     }
+    #toolbar .separator {
+      width: 1px;
+      height: 24px;
+      background: #e0e0e0;
+      margin: 0 8px;
+    }
     #toolbar button {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #ddd;
+      height: 32px;
+      padding: 0 12px;
+      border: none;
       border-radius: 6px;
-      background: #fff;
-      color: #444;
-      font-size: 18px;
+      background: transparent;
+      color: #555;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-      line-height: 1;
+      gap: 6px;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
     }
     #toolbar button:hover {
-      background: #f0f0f0;
-      border-color: #bbb;
+      background: var(--pink-light);
+      color: var(--pink);
+    }
+    #toolbar button.active {
+      background: var(--pink-light);
+      color: var(--pink);
+    }
+    #toolbar button.icon-only {
+      width: 32px;
+      padding: 0;
+      justify-content: center;
+    }
+    #toolbar button :is(svg, .lucide),
+    #searchbar :is(svg, .lucide),
+    #btn-toggle-panel :is(svg, .lucide) {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    #btn-toggle-panel :is(svg, .lucide) {
+      width: 16px;
+      height: 16px;
+    }
+    #zoom-display {
+      min-width: 45px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
     }
 
     /* Search bar */
     #searchbar {
       position: absolute;
-      top: 12px;
-      left: 12px;
+      top: 16px;
+      left: 16px;
       z-index: 10;
       display: none;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      padding: 10px 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      min-height: 52px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
     }
     #searchbar input {
       border: none;
       outline: none;
-      font-size: 17px;
-      width: min(360px, 42vw);
-      background: transparent;
-      color: #222;
-      line-height: 1.4;
+      font-size: 14px;
+      width: 200px;
+      color: #333;
     }
-    #searchbar input::placeholder {
-      color: #999;
-    }
-    #searchbar input.no-match {
-      color: #e53e3e;
-    }
+    #searchbar input::placeholder { color: #999; }
+    #searchbar input.no-match { color: #dc3545; }
     #search-counter {
-      font-size: 15px;
+      font-size: 12px;
       font-weight: 600;
-      color: #555;
-      min-width: 72px;
+      color: #888;
+      min-width: 45px;
       text-align: center;
-      padding: 0 4px;
     }
     #searchbar button {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background: #f8f8f8;
-      color: #444;
-      font-size: 17px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: #f5f5f5;
+      color: #666;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s, border-color 0.15s;
-      flex-shrink: 0;
     }
-    #searchbar button:hover {
-      background: #eee;
-      border-color: #ccc;
-    }
+    #searchbar button:hover { background: var(--pink-light); color: var(--pink); }
 
-    /* Foco nos resultados da busca */
-    #map-container {
-      --markmap-highlight-node-bg: rgba(255, 193, 7, 0.55);
-    }
-    #map-container.searching .markmap-node {
-      opacity: 0.28;
-      transition: opacity 0.3s ease;
-    }
-    #map-container.searching .markmap-node.search-active {
-      opacity: 1;
-    }
-    #map-container.searching .markmap-node.search-active .markmap-foreign {
-      font-weight: 600;
-    }
-    #map-container.searching .markmap-link {
-      opacity: 0.15;
-      transition: opacity 0.3s ease;
-    }
-    #map-container.searching .markmap-highlight rect {
-      fill: rgba(255, 193, 7, 0.5);
-      stroke: #e67e00;
-      stroke-width: 2.5px;
-      rx: 8;
-      ry: 8;
-      filter: drop-shadow(0 0 14px rgba(230, 126, 0, 0.55));
-      animation: search-highlight-pulse 1.6s ease-in-out infinite;
-    }
-    @keyframes search-highlight-pulse {
-      0%, 100% {
-        stroke-width: 2.5px;
-        filter: drop-shadow(0 0 10px rgba(230, 126, 0, 0.45));
-      }
-      50% {
-        stroke-width: 3.5px;
-        filter: drop-shadow(0 0 22px rgba(230, 126, 0, 0.75));
-      }
-    }
+    /* Search highlight */
+    #map-container.searching .markmap-node { opacity: 0.25; }
+    #map-container.searching .markmap-node.search-active { opacity: 1; }
+    #map-container.searching .markmap-link { opacity: 0.15; }
 
     /* Dark mode */
-    body.dark { background: #1e1e2e; }
-    body.dark #editor {
-      background: #1e1e2e;
-      border-right-color: #333;
-    }
-    body.dark #editor h2 {
-      background: #181825;
-      color: #aaa;
-      border-bottom-color: #333;
-    }
-    body.dark #btn-toggle-panel {
-      color: #888;
-      border-color: #444;
-    }
-    body.dark #btn-toggle-panel:hover {
-      background: #363650;
-      color: #cdd6f4;
-    }
-    body.dark #btn-layout.active {
-      background: #1a2a4a;
-      color: #89b4fa;
-      border-color: #4a6fa5;
-    }
-    body.dark textarea {
-      background: #1e1e2e;
-      color: #cdd6f4;
-    }
-    body.dark #toolbar button {
-      background: #2a2a3e;
-      color: #cdd6f4;
-      border-color: #444;
-    }
-    body.dark #toolbar button:hover {
-      background: #363650;
-    }
-    body.dark #searchbar {
-      background: #2a2a3e;
-      border-color: #444;
-    }
-    body.dark #searchbar input {
-      color: #cdd6f4;
-    }
-    body.dark #searchbar button {
-      color: #cdd6f4;
-      background: #363650;
-      border-color: #555;
-    }
-    body.dark #searchbar button:hover {
-      background: #454560;
-    }
-    body.dark #search-counter {
-      color: #aaa;
-    }
-    body.dark #map-container {
-      --markmap-highlight-node-bg: rgba(250, 204, 21, 0.4);
-    }
-    body.dark #map-container.searching .markmap-highlight rect {
-      fill: rgba(250, 204, 21, 0.35);
-      stroke: #fbbf24;
-      filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.5));
-    }
+    body.dark { background: #1a1a2e; }
+    body.dark #editor { background: #1e1e2e; border-color: #333; }
+    body.dark #editor h2 { background: #181825; color: #aaa; border-color: #333; }
+    body.dark #btn-toggle-panel { color: #888; border-color: #444; }
+    body.dark #btn-toggle-panel:hover { background: #2d2d44; }
+    body.dark textarea { background: #1e1e2e; color: #cdd6f4; }
+    body.dark #map-container { background: #1a1a2e; }
+    body.dark #toolbar { background: #252536; border-color: #333; }
+    body.dark #toolbar .separator { background: #444; }
+    body.dark #toolbar button { color: #cdd6f4; }
+    body.dark #toolbar button:hover { background: #3d3d55; }
+    body.dark #zoom-display { color: #aaa; }
+    body.dark #searchbar { background: #252536; border-color: #333; }
+    body.dark #searchbar input { color: #cdd6f4; }
+    body.dark #searchbar button { background: #3d3d55; color: #cdd6f4; }
   </style>
 </head>
 <body>
   <div id="app">
     <div id="editor">
-      <h2><span>Markdown</span><button id="btn-toggle-panel" onclick="togglePanel()" title="Retrair painel">‹</button></h2>
+      <h2>
+        <span>Markdown</span>
+        <button id="btn-toggle-panel" class="icon-only" onclick="togglePanel()" title="Retrair painel" type="button">
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </h2>
       <textarea id="md-input" spellcheck="false">
 # Mapa Mental
 
@@ -316,21 +282,56 @@
     </div>
     <div id="map-container">
       <svg id="mindmap"></svg>
+      
       <div id="searchbar">
-        <input id="search-input" type="text" placeholder="Buscar no mapa..." autocomplete="off" />
+        <i data-lucide="search"></i>
+        <input id="search-input" type="text" placeholder="Buscar..." autocomplete="off" />
         <span id="search-counter"></span>
-        <button onclick="searchPrev()" title="Anterior (Shift+Enter)">↑</button>
-        <button onclick="searchNext()" title="Próximo (Enter)">↓</button>
-        <button onclick="closeSearch()" title="Fechar (Esc)">×</button>
+        <button type="button" onclick="searchPrev()" title="Anterior (Shift+Enter)"><i data-lucide="chevron-up"></i></button>
+        <button type="button" onclick="searchNext()" title="Próximo (Enter)"><i data-lucide="chevron-down"></i></button>
+        <button type="button" onclick="closeSearch()" title="Fechar (Esc)"><i data-lucide="x"></i></button>
       </div>
+      
       <div id="toolbar">
-        <button id="btn-zoom-in" title="Zoom In" onclick="mm.rescale(1.25)">+</button>
-        <button id="btn-zoom-out" title="Zoom Out" onclick="mm.rescale(0.8)">−</button>
-        <button id="btn-fit" title="Ajustar tela" onclick="mm.fit()">⊡</button>
-        <button id="btn-fold" title="Expandir/Colapsar tudo" onclick="toggleAll()">⊟</button>
-        <button id="btn-dark" title="Modo escuro" onclick="toggleDark()">◑</button>
-        <button id="btn-search" title="Buscar (Ctrl+F)" onclick="openSearch()">⌕</button>
-        <button id="btn-layout" title="Ambos os lados" onclick="toggleLayout()">⇔</button>
+        <button type="button" class="icon-only" onclick="openSearch()" title="Buscar (Ctrl+F)">
+          <i data-lucide="search"></i>
+        </button>
+        
+        <div class="separator"></div>
+        
+        <button type="button" class="icon-only" onclick="zoomOut()" title="Diminuir zoom">
+          <i data-lucide="minus"></i>
+        </button>
+        <span id="zoom-display">100%</span>
+        <button type="button" class="icon-only" onclick="zoomIn()" title="Aumentar zoom">
+          <i data-lucide="plus"></i>
+        </button>
+        <button type="button" class="icon-only" onclick="fitView()" title="Ajustar à tela">
+          <i data-lucide="crosshair"></i>
+        </button>
+        
+        <div class="separator"></div>
+        
+        <button type="button" onclick="expandAll()" title="Expandir todos os ramos">
+          <i data-lucide="unfold-vertical"></i>
+          Abrir tudo
+        </button>
+        <button type="button" onclick="collapseAll()" title="Recolher todos os ramos">
+          <i data-lucide="fold-vertical"></i>
+          Recolher tudo
+        </button>
+        
+        <div class="separator"></div>
+        
+        <button type="button" class="icon-only" id="btn-layout" onclick="toggleLayout()" title="Ambos os lados">
+          <i data-lucide="columns-2"></i>
+        </button>
+        <button type="button" class="icon-only" id="btn-dark" onclick="toggleDark()" title="Modo escuro">
+          <i data-lucide="moon"></i>
+        </button>
+        <button type="button" class="icon-only" onclick="downloadPng()" title="Baixar PNG">
+          <i data-lucide="download"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -338,15 +339,55 @@
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18"></script>
   <script src="markmap-src/packages/markmap-view/dist/browser/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script>
+    function refreshLucideIcons() {
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /** Lucide troca <i> por <svg>; use isto para atualizar ícones em botões. */
+    function setLucideIcon(container, iconName) {
+      container.replaceChildren();
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', iconName);
+      container.appendChild(icon);
+      if (window.lucide) lucide.createIcons({ root: container });
+    }
+
     const { Transformer } = window.markmap;
     const { Markmap, loadCSS, loadJS } = window.markmap;
 
     const transformer = new Transformer();
     const svg = document.getElementById('mindmap');
-    let mm = Markmap.create(svg, { bidirectional: true, autoFit: true });
+    let mm = Markmap.create(svg, { 
+      bidirectional: true, 
+      autoFit: true,
+      color: () => '#E91E8C'
+    });
 
     let layoutBoth = true;
+
+    function syncZoom() {
+      const transform = d3.zoomTransform(svg);
+      document.getElementById('zoom-display').textContent = Math.round(transform.k * 100) + '%';
+    }
+
+    mm.zoom.on('zoom.display', syncZoom);
+
+    function zoomIn() {
+      mm.rescale(1.25);
+      setTimeout(syncZoom, 50);
+    }
+
+    function zoomOut() {
+      mm.rescale(0.8);
+      setTimeout(syncZoom, 50);
+    }
+
+    function fitView() {
+      mm.fit();
+      setTimeout(syncZoom, 300);
+    }
 
     function update() {
       const md = document.getElementById('md-input').value;
@@ -356,9 +397,9 @@
       if (scripts) loadJS(scripts, { getMarkmap: () => window.markmap });
       mm.setData(root, { bidirectional: layoutBoth });
       mm.fit();
+      setTimeout(syncZoom, 300);
     }
 
-    /** Limpa todos os estados de fold de todos os nós. */
     function clearAllFoldState(node) {
       if (!node) return;
       if (node.payload) {
@@ -370,48 +411,34 @@
 
     function toggleLayout() {
       layoutBoth = !layoutBoth;
+      if (mm.state.data) clearAllFoldState(mm.state.data);
       const btn = document.getElementById('btn-layout');
-      btn.textContent = layoutBoth ? '⇔' : '→';
+      setLucideIcon(btn, layoutBoth ? 'columns-2' : 'panel-right');
       btn.title = layoutBoth ? 'Ambos os lados' : 'Somente direita';
       btn.classList.toggle('active', !layoutBoth);
-      
-      // Limpa todos os estados de fold ao trocar de modo para evitar inconsistências
-      if (mm.state.data) {
-        clearAllFoldState(mm.state.data);
-      }
-      allFolded = false;
-      document.getElementById('btn-fold').textContent = '⊟';
-      document.getElementById('btn-fold').title = 'Colapsar tudo';
-      
       mm.setOptions({ bidirectional: layoutBoth });
       mm.renderData();
       mm.fit();
     }
 
-    // Expand / Collapse all
-    let allFolded = false;
-    function setFoldAll(node, fold, isRoot = false) {
-      // No modo bidirecional, a raiz usa foldLeft/foldRight; demais nós usam fold
-      // No modo direita, todos usam fold
-      // Sempre limpar os estados de fold que não são usados no modo atual
-      const p = { ...(node.payload || {}) };
-      delete p.fold;
-      delete p.foldLeft;
-      delete p.foldRight;
-      
-      if (isRoot && layoutBoth) {
-        node.payload = { ...p, foldLeft: fold, foldRight: fold };
-      } else {
-        node.payload = { ...p, fold };
-      }
-      if (node.children) node.children.forEach(c => setFoldAll(c, fold, false));
-    }
-    function toggleAll() {
-      allFolded = !allFolded;
-      setFoldAll(mm.state.data, allFolded ? 1 : 0, true);
+    function expandAll() {
+      if (!mm.state.data) return;
+      clearAllFoldState(mm.state.data);
       mm.renderData();
-      document.getElementById('btn-fold').textContent = allFolded ? '⊞' : '⊟';
-      document.getElementById('btn-fold').title = allFolded ? 'Expandir tudo' : 'Colapsar tudo';
+      mm.fit();
+    }
+
+    function collapseAll() {
+      if (!mm.state.data) return;
+      const root = mm.state.data;
+      if (layoutBoth) {
+        root.payload = { ...(root.payload || {}), foldLeft: 1, foldRight: 1 };
+      } else {
+        // No modo unilateral, fold: 1 na raiz esconde todos os filhos
+        root.payload = { ...(root.payload || {}), fold: 1 };
+      }
+      mm.renderData();
+      mm.fit();
     }
 
     // Dark mode
@@ -420,39 +447,14 @@
       isDark = !isDark;
       document.body.classList.toggle('dark', isDark);
       document.getElementById('map-container').classList.toggle('markmap-dark', isDark);
-      document.getElementById('btn-dark').title = isDark ? 'Modo claro' : 'Modo escuro';
+      const btnDark = document.getElementById('btn-dark');
+      setLucideIcon(btnDark, isDark ? 'sun' : 'moon');
+      btnDark.title = isDark ? 'Modo claro' : 'Modo escuro';
     }
 
     // Search
     let searchMatches = [];
     let searchIndex = -1;
-    let searchRecenterTimer = null;
-
-    function cancelSearchRecenter() {
-      if (searchRecenterTimer !== null) {
-        clearTimeout(searchRecenterTimer);
-        searchRecenterTimer = null;
-      }
-    }
-
-    /** Cancela fit()/zoom em andamento antes de centralizar no resultado. */
-    function stopMapZoomTransition() {
-      d3.select(svg).interrupt();
-    }
-
-    /** Markmap observa resize do HTML dos nós e chama renderData+fit ~100ms depois. */
-    function scheduleSearchRecenter() {
-      cancelSearchRecenter();
-      searchRecenterTimer = setTimeout(async () => {
-        searchRecenterTimer = null;
-        if (document.getElementById('searchbar').style.display === 'none') return;
-        if (!searchMatches.length || searchIndex < 0) return;
-        stopMapZoomTransition();
-        await mm.centerNode(searchMatches[searchIndex], {
-          left: 100, right: 100, top: 100, bottom: 100,
-        });
-      }, 150);
-    }
 
     function nodeText(node) {
       const tmp = document.createElement('div');
@@ -483,15 +485,11 @@
 
     function clearSearchFocus() {
       document.getElementById('map-container').classList.remove('searching');
-      document.querySelectorAll('.markmap-node.search-active').forEach(el => {
-        el.classList.remove('search-active');
-      });
+      document.querySelectorAll('.markmap-node.search-active').forEach(el => el.classList.remove('search-active'));
     }
 
     function applySearchFocus(node) {
-      document.querySelectorAll('.markmap-node.search-active').forEach(el => {
-        el.classList.remove('search-active');
-      });
+      document.querySelectorAll('.markmap-node.search-active').forEach(el => el.classList.remove('search-active'));
       const found = mm.findElement(node);
       if (found) found.g.classList.add('search-active');
       document.getElementById('map-container').classList.add('searching');
@@ -499,7 +497,6 @@
 
     async function navigateToMatch() {
       if (!searchMatches.length) {
-        cancelSearchRecenter();
         clearSearchFocus();
         mm.setHighlight(null);
         updateCounter();
@@ -507,11 +504,11 @@
       }
       const node = searchMatches[searchIndex];
       unfoldPath(node);
+      mm.setOptions({ autoFit: false });
       await mm.setHighlight(node);
+      mm.setOptions({ autoFit: true });
       applySearchFocus(node);
-      stopMapZoomTransition();
-      await mm.centerNode(node, { left: 100, right: 100, top: 100, bottom: 100 });
-      scheduleSearchRecenter();
+      mm.centerNode(node);
       updateCounter();
     }
 
@@ -552,22 +549,18 @@
     }
 
     function openSearch() {
-      mm.setOptions({ autoFit: false });
-      const bar = document.getElementById('searchbar');
-      bar.style.display = 'flex';
+      document.getElementById('searchbar').style.display = 'flex';
       document.getElementById('search-input').focus();
+      refreshLucideIcons();
     }
 
     function closeSearch() {
-      cancelSearchRecenter();
-      const bar = document.getElementById('searchbar');
-      bar.style.display = 'none';
+      document.getElementById('searchbar').style.display = 'none';
       document.getElementById('search-input').value = '';
       searchMatches = [];
       searchIndex = -1;
       clearSearchFocus();
       mm.setHighlight(null);
-      mm.setOptions({ autoFit: true });
       updateCounter();
     }
 
@@ -584,6 +577,37 @@
       }
     });
 
+    // Download PNG
+    function downloadPng() {
+      const svgEl = svg.cloneNode(true);
+      const { width, height } = svg.getBoundingClientRect();
+      svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      svgEl.setAttribute('width', width * 2);
+      svgEl.setAttribute('height', height * 2);
+      svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      
+      const svgData = new XMLSerializer().serializeToString(svgEl);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width * 2;
+        canvas.height = height * 2;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'mapa-mental.png';
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+    }
+
     // Toggle editor panel
     let panelCollapsed = false;
     function togglePanel() {
@@ -591,17 +615,14 @@
       const editor = document.getElementById('editor');
       editor.classList.toggle('collapsed', panelCollapsed);
       const btn = document.getElementById('btn-toggle-panel');
-      btn.textContent = panelCollapsed ? '›' : '‹';
+      setLucideIcon(btn, panelCollapsed ? 'chevron-right' : 'chevron-left');
       btn.title = panelCollapsed ? 'Expandir painel' : 'Retrair painel';
-      editor.addEventListener('transitionend', function onEnd(e) {
-        if (e.propertyName !== 'width') return;
-        editor.removeEventListener('transitionend', onEnd);
-        mm.fit();
-      });
+      setTimeout(() => mm.fit(), 300);
     }
 
     document.getElementById('md-input').addEventListener('input', update);
     update();
+    refreshLucideIcons();
   </script>
 </body>
 </html>
