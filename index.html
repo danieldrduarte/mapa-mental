@@ -18,7 +18,12 @@
       flex-direction: column;
       border-right: 1px solid #ddd;
       background: #fff;
-      transition: background 0.3s, border-color 0.3s;
+      transition: background 0.3s, border-color 0.3s, width 0.25s ease, min-width 0.25s ease;
+      overflow: hidden;
+    }
+    #editor.collapsed {
+      width: 40px;
+      min-width: 40px;
     }
     #editor h2 {
       padding: 12px 16px;
@@ -26,7 +31,47 @@
       color: #555;
       border-bottom: 1px solid #eee;
       background: #fafafa;
-      transition: background 0.3s, color 0.3s;
+      transition: background 0.3s, color 0.3s, padding 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #editor.collapsed h2 {
+      padding: 8px 4px;
+      justify-content: center;
+    }
+    #editor.collapsed h2 span {
+      display: none;
+    }
+    #editor.collapsed textarea {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #btn-toggle-panel {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: transparent;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    #btn-toggle-panel:hover { background: #e8e8e8; color: #333; }
+    #btn-layout.active {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border-color: #a8c7fa;
     }
     textarea {
       flex: 1;
@@ -88,45 +133,94 @@
       z-index: 10;
       display: none;
       align-items: center;
-      gap: 4px;
+      gap: 10px;
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 4px 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-height: 52px;
     }
     #searchbar input {
       border: none;
       outline: none;
-      font-size: 13px;
-      width: 180px;
+      font-size: 17px;
+      width: min(360px, 42vw);
       background: transparent;
-      color: #333;
+      color: #222;
+      line-height: 1.4;
+    }
+    #searchbar input::placeholder {
+      color: #999;
     }
     #searchbar input.no-match {
       color: #e53e3e;
     }
     #search-counter {
-      font-size: 12px;
-      color: #888;
-      min-width: 52px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #555;
+      min-width: 72px;
       text-align: center;
+      padding: 0 4px;
     }
     #searchbar button {
-      width: 24px;
-      height: 24px;
-      border: none;
-      border-radius: 4px;
-      background: transparent;
-      color: #666;
-      font-size: 14px;
+      width: 36px;
+      height: 36px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #f8f8f8;
+      color: #444;
+      font-size: 17px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s;
+      transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
     }
-    #searchbar button:hover { background: #f0f0f0; }
+    #searchbar button:hover {
+      background: #eee;
+      border-color: #ccc;
+    }
+
+    /* Foco nos resultados da busca */
+    #map-container {
+      --markmap-highlight-node-bg: rgba(255, 193, 7, 0.55);
+    }
+    #map-container.searching .markmap-node {
+      opacity: 0.28;
+      transition: opacity 0.3s ease;
+    }
+    #map-container.searching .markmap-node.search-active {
+      opacity: 1;
+    }
+    #map-container.searching .markmap-node.search-active .markmap-foreign {
+      font-weight: 600;
+    }
+    #map-container.searching .markmap-link {
+      opacity: 0.15;
+      transition: opacity 0.3s ease;
+    }
+    #map-container.searching .markmap-highlight rect {
+      fill: rgba(255, 193, 7, 0.5);
+      stroke: #e67e00;
+      stroke-width: 2.5px;
+      rx: 8;
+      ry: 8;
+      filter: drop-shadow(0 0 14px rgba(230, 126, 0, 0.55));
+      animation: search-highlight-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes search-highlight-pulse {
+      0%, 100% {
+        stroke-width: 2.5px;
+        filter: drop-shadow(0 0 10px rgba(230, 126, 0, 0.45));
+      }
+      50% {
+        stroke-width: 3.5px;
+        filter: drop-shadow(0 0 22px rgba(230, 126, 0, 0.75));
+      }
+    }
 
     /* Dark mode */
     body.dark { background: #1e1e2e; }
@@ -138,6 +232,19 @@
       background: #181825;
       color: #aaa;
       border-bottom-color: #333;
+    }
+    body.dark #btn-toggle-panel {
+      color: #888;
+      border-color: #444;
+    }
+    body.dark #btn-toggle-panel:hover {
+      background: #363650;
+      color: #cdd6f4;
+    }
+    body.dark #btn-layout.active {
+      background: #1a2a4a;
+      color: #89b4fa;
+      border-color: #4a6fa5;
     }
     body.dark textarea {
       background: #1e1e2e;
@@ -160,19 +267,29 @@
     }
     body.dark #searchbar button {
       color: #cdd6f4;
+      background: #363650;
+      border-color: #555;
     }
     body.dark #searchbar button:hover {
-      background: #363650;
+      background: #454560;
     }
     body.dark #search-counter {
-      color: #888;
+      color: #aaa;
+    }
+    body.dark #map-container {
+      --markmap-highlight-node-bg: rgba(250, 204, 21, 0.4);
+    }
+    body.dark #map-container.searching .markmap-highlight rect {
+      fill: rgba(250, 204, 21, 0.35);
+      stroke: #fbbf24;
+      filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.5));
     }
   </style>
 </head>
 <body>
   <div id="app">
     <div id="editor">
-      <h2>Markdown</h2>
+      <h2><span>Markdown</span><button id="btn-toggle-panel" onclick="togglePanel()" title="Retrair painel">‹</button></h2>
       <textarea id="md-input" spellcheck="false">
 # Mapa Mental
 
@@ -200,7 +317,7 @@
     <div id="map-container">
       <svg id="mindmap"></svg>
       <div id="searchbar">
-        <input id="search-input" type="text" placeholder="Buscar..." autocomplete="off" />
+        <input id="search-input" type="text" placeholder="Buscar no mapa..." autocomplete="off" />
         <span id="search-counter"></span>
         <button onclick="searchPrev()" title="Anterior (Shift+Enter)">↑</button>
         <button onclick="searchNext()" title="Próximo (Enter)">↓</button>
@@ -212,7 +329,8 @@
         <button id="btn-fit" title="Ajustar tela" onclick="mm.fit()">⊡</button>
         <button id="btn-fold" title="Expandir/Colapsar tudo" onclick="toggleAll()">⊟</button>
         <button id="btn-dark" title="Modo escuro" onclick="toggleDark()">◑</button>
-        <button id="btn-search" title="Buscar (Ctrl+F)" onclick="openSearch()">🔍</button>
+        <button id="btn-search" title="Buscar (Ctrl+F)" onclick="openSearch()">⌕</button>
+        <button id="btn-layout" title="Ambos os lados" onclick="toggleLayout()">⇔</button>
       </div>
     </div>
   </div>
@@ -228,14 +346,25 @@
     const svg = document.getElementById('mindmap');
     let mm = Markmap.create(svg, { bidirectional: true, autoFit: true });
 
+    let layoutBoth = true;
+
     function update() {
       const md = document.getElementById('md-input').value;
       const { root, features } = transformer.transform(md);
       const { styles, scripts } = transformer.getUsedAssets(features);
       if (styles) loadCSS(styles);
       if (scripts) loadJS(scripts, { getMarkmap: () => window.markmap });
-      mm.setData(root);
+      mm.setData(root, { bidirectional: layoutBoth });
       mm.fit();
+    }
+
+    function toggleLayout() {
+      layoutBoth = !layoutBoth;
+      const btn = document.getElementById('btn-layout');
+      btn.textContent = layoutBoth ? '⇔' : '→';
+      btn.title = layoutBoth ? 'Ambos os lados' : 'Somente direita';
+      btn.classList.toggle('active', !layoutBoth);
+      update();
     }
 
     // Expand / Collapse all
@@ -269,6 +398,33 @@
     // Search
     let searchMatches = [];
     let searchIndex = -1;
+    let searchRecenterTimer = null;
+
+    function cancelSearchRecenter() {
+      if (searchRecenterTimer !== null) {
+        clearTimeout(searchRecenterTimer);
+        searchRecenterTimer = null;
+      }
+    }
+
+    /** Cancela fit()/zoom em andamento antes de centralizar no resultado. */
+    function stopMapZoomTransition() {
+      d3.select(svg).interrupt();
+    }
+
+    /** Markmap observa resize do HTML dos nós e chama renderData+fit ~100ms depois. */
+    function scheduleSearchRecenter() {
+      cancelSearchRecenter();
+      searchRecenterTimer = setTimeout(async () => {
+        searchRecenterTimer = null;
+        if (document.getElementById('searchbar').style.display === 'none') return;
+        if (!searchMatches.length || searchIndex < 0) return;
+        stopMapZoomTransition();
+        await mm.centerNode(searchMatches[searchIndex], {
+          left: 100, right: 100, top: 100, bottom: 100,
+        });
+      }, 150);
+    }
 
     function nodeText(node) {
       const tmp = document.createElement('div');
@@ -297,8 +453,26 @@
       walk(mm.state.data);
     }
 
+    function clearSearchFocus() {
+      document.getElementById('map-container').classList.remove('searching');
+      document.querySelectorAll('.markmap-node.search-active').forEach(el => {
+        el.classList.remove('search-active');
+      });
+    }
+
+    function applySearchFocus(node) {
+      document.querySelectorAll('.markmap-node.search-active').forEach(el => {
+        el.classList.remove('search-active');
+      });
+      const found = mm.findElement(node);
+      if (found) found.g.classList.add('search-active');
+      document.getElementById('map-container').classList.add('searching');
+    }
+
     async function navigateToMatch() {
       if (!searchMatches.length) {
+        cancelSearchRecenter();
+        clearSearchFocus();
         mm.setHighlight(null);
         updateCounter();
         return;
@@ -306,7 +480,10 @@
       const node = searchMatches[searchIndex];
       unfoldPath(node);
       await mm.setHighlight(node);
-      mm.centerNode(node);
+      applySearchFocus(node);
+      stopMapZoomTransition();
+      await mm.centerNode(node, { left: 100, right: 100, top: 100, bottom: 100 });
+      scheduleSearchRecenter();
       updateCounter();
     }
 
@@ -317,6 +494,7 @@
         searchMatches = [];
         searchIndex = -1;
         input.classList.remove('no-match');
+        clearSearchFocus();
         mm.setHighlight(null);
         updateCounter();
         return;
@@ -346,18 +524,22 @@
     }
 
     function openSearch() {
+      mm.setOptions({ autoFit: false });
       const bar = document.getElementById('searchbar');
       bar.style.display = 'flex';
       document.getElementById('search-input').focus();
     }
 
     function closeSearch() {
+      cancelSearchRecenter();
       const bar = document.getElementById('searchbar');
       bar.style.display = 'none';
       document.getElementById('search-input').value = '';
       searchMatches = [];
       searchIndex = -1;
+      clearSearchFocus();
       mm.setHighlight(null);
+      mm.setOptions({ autoFit: true });
       updateCounter();
     }
 
@@ -373,6 +555,22 @@
         openSearch();
       }
     });
+
+    // Toggle editor panel
+    let panelCollapsed = false;
+    function togglePanel() {
+      panelCollapsed = !panelCollapsed;
+      const editor = document.getElementById('editor');
+      editor.classList.toggle('collapsed', panelCollapsed);
+      const btn = document.getElementById('btn-toggle-panel');
+      btn.textContent = panelCollapsed ? '›' : '‹';
+      btn.title = panelCollapsed ? 'Expandir painel' : 'Retrair painel';
+      editor.addEventListener('transitionend', function onEnd(e) {
+        if (e.propertyName !== 'width') return;
+        editor.removeEventListener('transitionend', onEnd);
+        mm.fit();
+      });
+    }
 
     document.getElementById('md-input').addEventListener('input', update);
     update();
