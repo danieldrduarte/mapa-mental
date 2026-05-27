@@ -200,6 +200,7 @@
       font-size: 14px;
       width: 200px;
       color: #333;
+      background: transparent;
     }
     #searchbar input::placeholder { color: #999; }
     #searchbar input.no-match { color: #dc3545; }
@@ -242,9 +243,20 @@
     body.dark #toolbar button { color: #cdd6f4; }
     body.dark #toolbar button:hover { background: #3d3d55; }
     body.dark #zoom-display { color: #aaa; }
-    body.dark #searchbar { background: #252536; border-color: #333; }
-    body.dark #searchbar input { color: #cdd6f4; }
+    body.dark #searchbar {
+      background: #252536;
+      border-color: #333;
+      color-scheme: dark;
+    }
+    body.dark #searchbar input {
+      color: #cdd6f4;
+      background: transparent;
+    }
+    body.dark #searchbar input::placeholder { color: #6c7086; }
+    body.dark #search-counter { color: #a6adc8; }
+    body.dark #searchbar :is(svg, .lucide) { color: #cdd6f4; }
     body.dark #searchbar button { background: #3d3d55; color: #cdd6f4; }
+    body.dark #searchbar button:hover { background: #4a4a6a; color: #f5c2e0; }
   </style>
 </head>
 <body>
